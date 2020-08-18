@@ -2,23 +2,23 @@
 namespace waypoint {
     const SPRITE_KIND_WAYPOINT = SpriteKind.create()
     const IMAGE_WAYPOINT = img`
-                . . . . . . . . . . . . . . . .
-                . . . . . . . . . . . . . . . .
-                . . . . . . . . . . . . . . . .
-                . . . . . . . . . . . . . . . .
-                . . . . . . . . . . . . . . . .
-                . . . . . . . . . . . . . . . .
-                . . . . . . . . . . . . . . . .
-                . . . . . . . 3 3 . . . . . . .
-                . . . . . . . 3 3 . . . . . . .
-                . . . . . . . . . . . . . . . .
-                . . . . . . . . . . . . . . . .
-                . . . . . . . . . . . . . . . .
-                . . . . . . . . . . . . . . . .
-                . . . . . . . . . . . . . . . .
-                . . . . . . . . . . . . . . . .
-                . . . . . . . . . . . . . . . .
-            `
+        3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+        3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+        3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+        3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+        3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+        3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+        3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+        3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+        3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+        3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+        3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+        3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+        3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+        3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+        3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+        3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+    `
 
     export enum Direction{
         UP = 1, 
@@ -57,14 +57,27 @@ namespace waypoint {
         return Math.sqrt(Math.pow(sprite.vx, 2) + Math.pow(sprite.vy, 2))
     }
 
-    let registered:SparseArray<boolean> = []
+    let _showWaypoints = false;
 
     //%block
-    //% blockId=waypointPlaceWaypoint block="place waypoint on %location to make %kind=spritekind turn to %direction"
+    export function showWaypoints(show:boolean) {
+        _showWaypoints = show
+        for (let waypointSprite of sprites.allOfKind(SPRITE_KIND_WAYPOINT)) {
+            waypointSprite.setFlag(SpriteFlag.Invisible, !show)
+        }
+    }
+
+    let registered:SparseArray<boolean> = {}
+
+    //%block
+    //% blockId=waypointPlaceWaypoint block="place waypoint on $location to make %kind=spritekind turn to %direction"
+    //% location.shadow=mapgettile
     export function placeWaypoint(location:tiles.Location, kind:number, direction:Direction) {
         let waypointSprite = sprites.create(IMAGE_WAYPOINT, SPRITE_KIND_WAYPOINT)
         sprites.setDataNumber(waypointSprite, 'pxt-waypoint-direction', direction)
         sprites.setDataNumber(waypointSprite, 'pxt-waypoint-kind', kind)
+        waypointSprite.setFlag(SpriteFlag.Invisible, !_showWaypoints)
+        tiles.placeOnTile(waypointSprite, location)
         if (!registered[kind]) {
             registered[kind] = true
             sprites.onOverlap(SPRITE_KIND_WAYPOINT, kind, function(sprite: Sprite, otherSprite: Sprite) {
@@ -73,7 +86,7 @@ namespace waypoint {
                     // not target sprite kind
                     return
                 }
-                if (closeEnough(sprite, otherSprite)) {
+                if (!closeEnough(sprite, otherSprite)) {
                     // not in center
                     return 
                 }
