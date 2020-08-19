@@ -47,10 +47,10 @@ namespace waypoint {
         }
     }
 
-    let epsilon = 0.5
+    let epsilon = 1
 
     function closeEnough(sprite:Sprite, otherSprite:Sprite) {
-        return Math.sqrt(Math.pow(sprite.x - otherSprite.x, 2) + Math.pow(sprite.y - otherSprite.y, 2)) < 0.5
+        return Math.sqrt(Math.pow(sprite.x - otherSprite.x, 2) + Math.pow(sprite.y - otherSprite.y, 2)) <= epsilon
     }
 
     function speedOf(sprite:Sprite) :number{
