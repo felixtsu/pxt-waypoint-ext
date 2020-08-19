@@ -47,14 +47,30 @@ namespace waypoint {
         }
     }
 
-    let epsilon = 1
+    let epsilon = 1.5
+
+    function distanceOf(sprite:Sprite, otherSprite:Sprite):number {
+        return Math.sqrt(Math.pow(sprite.x - otherSprite.x, 2) + Math.pow(sprite.y - otherSprite.y, 2))
+    }
 
     function closeEnough(sprite:Sprite, otherSprite:Sprite) {
-        return Math.sqrt(Math.pow(sprite.x - otherSprite.x, 2) + Math.pow(sprite.y - otherSprite.y, 2)) <= epsilon
+        return distanceOf(sprite, otherSprite) < epsilon
     }
 
     function speedOf(sprite:Sprite) :number{
         return Math.sqrt(Math.pow(sprite.vx, 2) + Math.pow(sprite.vy, 2))
+    }
+
+    function movingDirectionOf(sprite:Sprite): Direction {
+        if (sprite.vx == 0 && sprite.vy < 0) {
+            return Direction.UP
+        } else if (sprite.vx > 0 && sprite.vy == 0) {
+            return Direction.RIGHT 
+        } else if (sprite.vx == 0 && sprite.vy > 0) {
+            return Direction.DOWN 
+        } else {
+            return Direction.LEFT
+        }
     }
 
     let _showWaypoints = false;
@@ -86,23 +102,36 @@ namespace waypoint {
                     // not target sprite kind
                     return
                 }
-                if (!closeEnough(sprite, otherSprite)) {
+
+                if (!closeEnough(sprite, otherSprite) || speedOf(otherSprite) == 0) {
                     // not in center
                     return 
                 }
 
                 let direction:Direction = sprites.readDataNumber(sprite, 'pxt-waypoint-direction')
-                if (direction == Direction.UP) {
-                    otherSprite.vy = 0 - speedOf(otherSprite)
+
+                if (movingDirectionOf(otherSprite) === direction) {
+                    return
+                }
+
+                const speed = speedOf(otherSprite)
+                if (distanceOf(sprite, otherSprite) >= 1) {
+                    otherSprite.x = sprite.x 
+                    otherSprite.y = sprite.y
+                }
+                
+
+                if (direction == Direction.UP && !otherSprite.isHittingTile(CollisionDirection.Top)) {
+                    otherSprite.vy = 0 - speed
                     otherSprite.vx = 0
-                } else if (direction == Direction.RIGHT) {
-                    otherSprite.vx = speedOf(otherSprite)
+                } else if (direction == Direction.RIGHT && !otherSprite.isHittingTile(CollisionDirection.Right)) {
+                    otherSprite.vx = speed
                     otherSprite.vy = 0
-                } if (direction == Direction.DOWN) {
-                    otherSprite.vy = speedOf(otherSprite)
+                } if (direction == Direction.DOWN && !otherSprite.isHittingTile(CollisionDirection.Bottom)) {
+                    otherSprite.vy = speed
                     otherSprite.vx = 0
-                } if (direction == Direction.LEFT) {
-                    otherSprite.vx = 0 - speedOf(otherSprite)
+                } if (direction == Direction.LEFT && !otherSprite.isHittingTile(CollisionDirection.Left)) {
+                    otherSprite.vx = 0 - speed
                     otherSprite.vy = 0
                 } 
             })
