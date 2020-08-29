@@ -49,6 +49,7 @@ namespace waypoint {
 
     let epsilon = 1.5
 
+
     function distanceOf(sprite:Sprite, otherSprite:Sprite):number {
         return Math.sqrt(Math.pow(sprite.x - otherSprite.x, 2) + Math.pow(sprite.y - otherSprite.y, 2))
     }
@@ -115,7 +116,7 @@ namespace waypoint {
                 }
 
                 const speed = speedOf(otherSprite)
-                if (distanceOf(sprite, otherSprite) >= 1) {
+                if (distanceOf(sprite, otherSprite) != 0) {
                     otherSprite.x = sprite.x 
                     otherSprite.y = sprite.y
                 }
