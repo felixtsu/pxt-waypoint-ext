@@ -47,7 +47,7 @@ namespace waypoint {
         }
     }
 
-    let epsilon = 1.5
+    let epsilon = 2
 
 
     function distanceOf(sprite:Sprite, otherSprite:Sprite):number {
