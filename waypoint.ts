@@ -62,6 +62,15 @@ namespace waypoint {
         return Math.sqrt(Math.pow(sprite.vx, 2) + Math.pow(sprite.vy, 2))
     }
 
+    function opposite(direction :Direction) {
+        switch (direction) {
+            case Direction.UP:return Direction.DOWN
+            case Direction.DOWN:return Direction.UP
+            case Direction.RIGHT:return Direction.LEFT
+            case Direction.LEFT:return Direction.RIGHT
+        }
+    }
+
     function movingDirectionOf(sprite:Sprite): Direction {
         if (sprite.vx == 0 && sprite.vy < 0) {
             return Direction.UP
@@ -86,13 +95,18 @@ namespace waypoint {
 
     let registered:SparseArray<boolean> = {}
 
-    //%block
-    //% blockId=waypointPlaceWaypoint block="place waypoint on $location to make %kind=spritekind turn to %direction"
-    //% location.shadow=mapgettile
-    export function placeWaypoint(location:tiles.Location, kind:number, direction:Direction) {
+    function placeWaypointImpl(location:tiles.Location, kind:number, directions:number[]) {
+        let direction = directions[0]
+        let twoway = false
+        if (directions.length == 2) {
+            direction = direction | directions[1]
+            twoway = true
+        }
+
         let waypointSprite = sprites.create(IMAGE_WAYPOINT, SPRITE_KIND_WAYPOINT)
         sprites.setDataNumber(waypointSprite, 'pxt-waypoint-direction', direction)
         sprites.setDataNumber(waypointSprite, 'pxt-waypoint-kind', kind)
+        sprites.setDataBoolean(waypointSprite, 'pxt-waypoint-twoway', twoway)
         waypointSprite.setFlag(SpriteFlag.Invisible, !_showWaypoints)
         tiles.placeOnTile(waypointSprite, location)
         if (!registered[kind]) {
@@ -104,14 +118,33 @@ namespace waypoint {
                     return
                 }
 
-                if (!closeEnough(sprite, otherSprite) || speedOf(otherSprite) == 0) {
+                if (!closeEnough(sprite, otherSprite) ) {
                     // not in center
                     return 
                 }
 
-                let direction:Direction = sprites.readDataNumber(sprite, 'pxt-waypoint-direction')
+                if (speedOf(otherSprite) == 0) {
+                    // not
+                    return
+                }
 
-                if (movingDirectionOf(otherSprite) === direction) {
+                let possibleDirection:Direction = sprites.readDataNumber(sprite, 'pxt-waypoint-direction')
+                let twoway = sprites.readDataBoolean(sprite, "pxt-waypoint-twoway")
+                let movingDirection = movingDirectionOf(otherSprite)
+
+                let direction:Direction
+                if (twoway) {
+                    if ((opposite(movingDirection) & possibleDirection) == 0) {
+                        // not in-track traffic, pass
+                        return 
+                    }
+                    direction = possibleDirection ^ opposite(movingDirection)
+
+                } else {
+                    direction = possibleDirection
+                }
+
+                if (direction == movingDirection) {
                     return
                 }
 
@@ -120,7 +153,6 @@ namespace waypoint {
                     otherSprite.x = sprite.x 
                     otherSprite.y = sprite.y
                 }
-                
 
                 if (direction == Direction.UP && !otherSprite.isHittingTile(CollisionDirection.Top)) {
                     otherSprite.vy = 0 - speed
@@ -138,7 +170,22 @@ namespace waypoint {
             })
         }
         
+    }
 
+
+    //%block
+    //% blockId=waypointPlace2wayWaypoint block="place 2-way waypoint on $location to make %kind=spritekind turn to %direction1 or %direction2"
+    //% location.shadow=mapgettile
+    export function placeTwowayWaypoint(location:tiles.Location, kind:number, direction1:Direction, direction2:Direction) {
+        placeWaypointImpl(location, kind, [direction1, direction2])
+        
+    }
+
+    //%block
+    //% blockId=waypointPlaceWaypoint block="place waypoint on $location to make %kind=spritekind turn to %direction"
+    //% location.shadow=mapgettile
+    export function placeWaypoint(location:tiles.Location, kind:number, direction:Direction) {
+       placeWaypointImpl(location, kind, [direction])
     }
     
 
